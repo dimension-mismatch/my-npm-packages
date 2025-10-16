@@ -1,0 +1,11 @@
+{
+  "name": "svgtools",
+  "version": "1.0.0",
+  "description": "Tools for working with SVG images, based on my htmltools framework",
+  "main": "svgtools.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "dimension-mismatch",
+  "license": "ISC"
+}
