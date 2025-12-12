@@ -1,6 +1,6 @@
 {
   "name": "svgtools",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Tools for working with SVG images, based on my htmltools framework",
   "main": "svgtools.js",
   "scripts": {

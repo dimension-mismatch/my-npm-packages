@@ -1,5 +1,7 @@
 {
-  "name": "my-npm-packages",
+  "name": "dimension-package-pack",
+  "version": "0.0.1",
+  "description" : "A monorepo containing all my npm packages for TS/JS code I commonly reuse",
   "private": "true",
   "workspaces":[
     "htmltools",

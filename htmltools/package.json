@@ -1,11 +1,7 @@
 {
   "name": "htmltools",
-  "version": "1.0.0",
-  "description": "Tools for working with html DOM",
+  "version": "0.0.1",
+  "description": "Tools for working with html DOM (i hate js frameworks)",
   "main": "htmltools.js",
-  "scripts": {
-    "test": "test"
-  },
-  "author": "dimension-mismatch",
-  "license": "ISC"
+  "author": "dimension-mismatch"
 }
