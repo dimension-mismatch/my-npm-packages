@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+      - run: npm install --package-lock-only
       - run: npm ci
       - run: npm publish ${{ github.event.inputs.packages }}
         env:
