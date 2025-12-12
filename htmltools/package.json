@@ -1,5 +1,5 @@
 {
-  "name": "htmltools",
+  "name": "@dimension-mismatch/htmltools",
   "version": "0.0.1",
   "description": "Tools for working with html DOM (i hate js frameworks)",
   "main": "htmltools.js",
