@@ -3,14 +3,6 @@
   "version": "0.0.1",
   "description": "Tools for working with SVG images, based on my htmltools framework",
   "main": "svgtools.js",
-  "scripts": {
-    "test": "test"
-  },
   "author": "dimension-mismatch",
-  "license": "ISC",
-  "dependencies": {
-    "htmltools": "https://gitpkg.vercel.app/dimension-mismatch/my-npm-packages/htmltools?main",
-    "install": "^0.13.0",
-    "npm": "^11.6.2"
-  }
+  "license": "ISC"
 }
