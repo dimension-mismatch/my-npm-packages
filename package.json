@@ -5,6 +5,7 @@
   "private": "true",
   "workspaces":[
     "htmltools",
-    "svgtools"
+    "svgtools",
+    "2dphysics"
   ]
 }

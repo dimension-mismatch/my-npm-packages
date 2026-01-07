@@ -4,5 +4,8 @@
   "description": "Tools for working with SVG images, based on my htmltools framework",
   "main": "svgtools.js",
   "author": "dimension-mismatch",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@dimension-mismatch/htmltools": "^0.0.1"
+  }
 }

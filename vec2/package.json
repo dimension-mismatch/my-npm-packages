@@ -1,0 +1,8 @@
+{
+  "name": "@dimension-mismatch/vec2",
+  "version": "0.0.1",
+  "description": "useful 2d vector operations",
+  "main": "calc.js",
+  "author": "dimension-mismatch",
+  "license": "ISC"
+}

@@ -1,4 +1,4 @@
-import { FElement } from "htmltools";
+import { FElement } from "@dimension-mismatch/htmltools"
 import { Transform2d } from "./transformtools.js";
 
 const ns =  "http://www.w3.org/2000/svg";
