@@ -6,6 +6,8 @@
   "workspaces":[
     "htmltools",
     "svgtools",
-    "2dphysics"
+    "2dphysics",
+    "vec2"
+
   ]
 }
