@@ -2,7 +2,7 @@
   "name": "@dimension-mismatch/2dphysics",
   "version": "0.0.1",
   "description": "A simple 2d rigid-body physics engine",
-  "main": "svgtools.js",
+  "main": "world.js",
   "author": "dimension-mismatch",
   "license": "ISC",
   "dependencies": {
