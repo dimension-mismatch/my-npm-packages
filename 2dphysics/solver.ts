@@ -1,4 +1,4 @@
-import { Rotation, vec2 } from "../vec2/calc.js";
+import { Rotation, vec2 } from "@dimension-mismatch/vec2";
 import { Contact } from "./collision.js";
 
 interface massFactor{

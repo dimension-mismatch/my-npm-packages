@@ -1,5 +1,5 @@
 import { Collection, GameObject, PhysicsObject } from "./body.js";
-import { Rotation, vec2 } from "../vec2/calc.js";
+import { Rotation, vec2 } from "@dimension-mismatch/vec2";
 import { Collision, Contact } from "./collision.js";
 import { Constraint } from "./constraints/constraint.js";
 import { Shape } from "./geometry.js";
