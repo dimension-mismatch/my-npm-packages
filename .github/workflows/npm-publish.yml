@@ -24,7 +24,6 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm install --package-lock-only
       - run: npm ci
-      - run: npm version patch --force
       - run: npm publish --access public --workspace @dimension-mismatch/${{ github.event.inputs.packages }}
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
