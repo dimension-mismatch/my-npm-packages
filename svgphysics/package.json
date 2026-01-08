@@ -1,6 +1,6 @@
 {
   "name": "@dimension-mismatch/svgphysics",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "rendering 2dphysics scenes with svgtools",
   "main": "svgRenderedWorld.ts",
   "author": "dimension-mismatch",
