@@ -1,6 +1,6 @@
 {
   "name": "@dimension-mismatch/svgtools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tools for working with SVG images, based on my htmltools framework",
   "main": "svgtools.js",
   "author": "dimension-mismatch",
