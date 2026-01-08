@@ -1,4 +1,4 @@
-import { Rotation, vec2 } from "../vec2/calc.js";
+import { Rotation, vec2 } from "@dimension-mismatch/vec2";
 import { Circle, Polygon, Shape, ShapeType } from "./geometry.js";
 let uniqueID: number = 0;
 
@@ -167,9 +167,11 @@ export class PhysicsObject implements GameObject{
     private calculateProperties(skipCOM?: boolean){
         let COM = new vec2(0,0);
         let totalArea = 0;
+
         for(let i = 0; i < this.colliders.length; i++){
-            totalArea += this.colliders[i].area;
-            COM.add(vec2.times(this.colliders[i].COM, this.colliders[i].area));
+            let com = this.colliders[i].computeWeightedCOM();
+            totalArea += com.area;
+            COM.add(vec2.times(com.COM, com.area));
         }
         COM.divideBy(totalArea);
         this.mass = totalArea * this.material.density;
@@ -179,7 +181,7 @@ export class PhysicsObject implements GameObject{
         let inertia = 0;
         for(let i = 0; i < this.colliders.length; i++){
             this.colliders[i].translate(COM.inverse());
-            inertia += this.colliders[i].inertia;
+            inertia += this.colliders[i].computeInertia();
         }
         this.inertia = inertia * this.material.density;
 

@@ -1,4 +1,4 @@
-import { Rotation, vec2 } from "../vec2/calc.js";
+import { Rotation, vec2 } from "@dimension-mismatch/vec2";
 
 export class Vertex{
     position: vec2;
@@ -14,42 +14,50 @@ export type Shape = Polygon | Circle;
 
 export class Polygon{
     type = ShapeType.POLYGON;
-    area: number;
-    inertia: number;
-    COM: vec2;
     vertices: Vertex[];
     constructor(points: vec2[], internalEdges?: boolean[]){
-        let totalArea = 0;
-        this.COM = vec2.zero();
         let lastPoint = points[points.length - 1];
         this.vertices = [];
-        this.inertia = 0;
         for(let i = 0; i < points.length; i++){
-            let triArea = vec2.cross(lastPoint, points[i]) / 2;
-            let triCom = vec2.times(vec2.plus(lastPoint, points[i]), triArea);
-            this.inertia += (lastPoint.magSqr() + vec2.dot(lastPoint, points[i]) + points[i].magSqr()) * triArea;
-
-            totalArea += triArea;
-            this.COM.add(triCom);
-
             this.vertices.push(
                 {position: points[i], 
                  normal: vec2.minus(points[i], lastPoint).normalize().rotateBy(Rotation.cw90deg()), 
                  isInternal: internalEdges? internalEdges[i]: false});
             lastPoint = points[i];
         }
-        this.COM.divideBy(totalArea * 3);
-        this.inertia /= 6;
-        this.area = totalArea;
     }
     translate(t: vec2){
         for(let i = 0; i < this.vertices.length; i++){
             this.vertices[i].position.add(t);
         }
-        this.inertia -= this.COM.magSqr() * this.area;
-        this.COM.add(t);
-        this.inertia += this.COM.magSqr() * this.area;
+    }
+    computeWeightedCOM(): {COM: vec2, area: number}{
+        let COM : vec2 = vec2.zero();
+        let totalArea = 0;
+        let lastPoint : vec2 = this.vertices[this.vertices.length - 1].position;
+        for(let i = 0; i < this.vertices.length; i++){
+            let currentPoint = this.vertices[i].position;
+            let triArea = vec2.cross(lastPoint, currentPoint) / 2;
+            let triCom = vec2.times(vec2.plus(lastPoint, currentPoint), triArea);
+            totalArea += triArea;
+            COM.add(triCom);
+            lastPoint = currentPoint;
+        }
+        COM.divideBy(totalArea);
+        return {COM: COM, area: totalArea};
+    }
+    computeInertia() : number{
+        let inertia = 0;
+        let lastPoint : vec2 = this.vertices[this.vertices.length - 1].position;
+        for(let i = 0; i < this.vertices.length; i++){
+            let currentPoint = this.vertices[i].position;
+            let triArea = vec2.cross(lastPoint, currentPoint) / 2;
 
+            inertia += (lastPoint.magSqr() + vec2.dot(lastPoint, currentPoint) + currentPoint.magSqr()) * triArea;
+            lastPoint = currentPoint;
+        }
+        inertia /= 6;
+        return inertia;
     }
     static rectangle(position: vec2, width: number , height: number){
         let x = position.x;
@@ -78,21 +86,22 @@ export class Polygon{
 }
 export class Circle{
     type = ShapeType.CIRCLE;
-    area: number;
-    inertia: number;
-    COM: vec2;
+    position: vec2;
     radius: number;
     
     constructor(position: vec2 , radius: number){
-        this.area = Math.PI * radius * radius;
-        this.inertia = this.area * radius * radius + 0.5 * position.magSqr() * this.area;
-        this.COM = position;
+        this.position = position;
         this.radius = radius;
     }
     translate(t: vec2){
-        this.inertia -= this.COM.magSqr() * this.area;
-        this.COM.add(t);
-        this.inertia += this.COM.magSqr() * this.area;
-
+        this.position.add(t);
+    }
+    computeWeightedCOM(): {COM: vec2, area: number}{
+        return {COM: this.position.copy(), area: Math.PI * this.radius * this.radius};
+    }
+    computeInertia(): number{
+        let rSquared = this.radius * this.radius;
+        let area = Math.PI * rSquared;
+        return area * rSquared + 0.5 * this.position.magSqr() * area;
     }
 }

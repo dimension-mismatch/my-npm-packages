@@ -1,6 +1,6 @@
 {
   "name": "@dimension-mismatch/2dphysics",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A simple 2d rigid-body physics engine",
   "main": "world.js",
   "author": "dimension-mismatch",

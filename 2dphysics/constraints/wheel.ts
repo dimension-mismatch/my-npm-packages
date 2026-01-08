@@ -1,5 +1,5 @@
 import { PhysicsObject } from "../body.js";
-import { vec2, Rotation } from "../../vec2/calc.js";
+import { vec2, Rotation } from "@dimension-mismatch/vec2";
 import { Constraint, ConstraintType } from "./constraint.js";
 export interface MotorDrivable extends Constraint{
   applyMotorTorque(torque: number): void;

@@ -21,7 +21,7 @@ function makeShapeSvg(shape: Shape): FESVGGroup{
   switch(shape.type){
     case ShapeType.CIRCLE:
       shape = shape as Circle
-      group = CIRCLE(shape.COM.x, shape.COM.y, shape.radius);
+      group = CIRCLE(shape.position.x, shape.position.y, shape.radius);
       break;
     case ShapeType.POLYGON:
       shape = shape as Polygon

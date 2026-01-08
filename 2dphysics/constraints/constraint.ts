@@ -1,5 +1,4 @@
-import { PhysicsObject } from "../body.js";
-import { Rotation, vec2 } from "../../vec2/calc.js";
+
 export enum ConstraintType{
   Spring,
   Mouse,

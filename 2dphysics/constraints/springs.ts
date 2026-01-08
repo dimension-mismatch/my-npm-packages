@@ -1,5 +1,5 @@
 import { PhysicsObject } from "../body.js";
-import { vec2 } from "../../vec2/calc.js";
+import { vec2 } from "@dimension-mismatch/vec2";
 import { Constraint, ConstraintType } from "./constraint.js";
 export interface SpringOptions{
   pointA?: vec2;

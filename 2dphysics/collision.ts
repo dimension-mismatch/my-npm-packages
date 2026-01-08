@@ -1,20 +1,17 @@
 import { PhysicsObject } from "./body.js";
-import { Rotation, vec2 } from "../vec2/calc.js";
+import { Rotation, vec2 } from "@dimension-mismatch/vec2";
 import { Circle, Polygon, Shape, ShapeType, Vertex } from "./geometry.js";
 
 export interface Contact{
     depth: number;
     normal: vec2;
-    objectA: PhysicsObject;
-    objectB: PhysicsObject;
-
-    shapeA: Shape;
-    shapeB: Shape;
+    objectA?: PhysicsObject;
+    objectB?: PhysicsObject;
 
     contactPoints: vec2[];
 }
 
-export interface SATresult{
+interface SATresult{
     axis: vec2;
     depth: number;
     Aindex: number;
@@ -26,21 +23,31 @@ function invert(r: Contact){
     let objectB = r.objectB;
     r.objectB = r.objectA;
     r.objectA = objectB;
-
-    let shapeB = r.shapeB;
-    r.shapeB = r.shapeA;
-    r.shapeA = shapeB;
 }
-function objectToVertexSpace(v: vec2, vert: Vertex): vec2{
-    return vec2.worldToLocalSpace(v , vert.position, new Rotation(0, vert.normal.x, vert.normal.y))
+function worldToVertexSpace(v: vec2, vert: Vertex): vec2{
+    return vec2.worldToLocalSpace(v , vert.position, new Rotation(0, vert.normal.x, vert.normal.y));
 }
-function worldToVertexSpace(v: vec2, objectA: PhysicsObject, objectB: PhysicsObject, vert: Vertex): vec2{
-    return objectToVertexSpace(objectB.worldToLocalSpace(objectA.localToWorldSpace(v)), vert);
+function vertexToWorldSpace(v: vec2, vert: Vertex): vec2{
+    return vec2.localToWorldSpace(v , vert.position, new Rotation(0, vert.normal.x, vert.normal.y));
 }
-function vertexToWorldSpace(v: vec2, objectB: PhysicsObject, vert: Vertex){
-    return objectB.localToWorldSpace(vec2.localToWorldSpace(v , vert.position, {angle: 0, cos: vert.normal.x, sin: vert.normal.y} as Rotation));
+function shapeFromObjectToWorldSpace(shape: Shape, object: PhysicsObject): Shape{
+    switch(shape.type){
+        case ShapeType.POLYGON:
+            const polygon = shape as Polygon;
+            return {vertices: polygon.vertices.map((v) => 
+                {return {isInternal: v.isInternal, 
+                         position: object.localToWorldSpace(v.position),
+                         normal: object.localToAASpace(v.normal)
+                 }}), type: ShapeType.POLYGON} as Polygon;
+        case ShapeType.CIRCLE:
+            const circle = shape as Circle;
+            return {position: object.localToWorldSpace(circle.position),
+                    radius: circle.radius,
+                    type: ShapeType.CIRCLE
+            } as Circle;
+    }
 }
-function SAT(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
+function SAT(shapeA: Polygon, shapeB: Polygon): Contact | false{
     let bestResult: SATresult = {axis: new vec2(0,0), depth: Infinity, Aindex: 0, Bindex: 0}
 
     //find which normal of shapeB has the least overlap
@@ -53,10 +60,8 @@ function SAT(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: 
         let BmaxProjection = vec2.dot(shapeB.vertices[axis].position, normal);
 
         for(let vertex = 0; vertex < shapeA.vertices.length; vertex++){
-            let worldPosition = objectA.localToWorldSpace(shapeA.vertices[vertex].position);
-            let localPosition = objectB.worldToLocalSpace(worldPosition);
 
-            let proj = vec2.dot(localPosition, normal);
+            let proj = vec2.dot(shapeA.vertices[vertex].position, normal);
             if(proj < AminProjection){
                 AminProjection = proj;
                 mindex = vertex;
@@ -88,10 +93,6 @@ function SAT(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: 
     
     let n2 = shapeA.vertices[n1idx].normal;
 
-    
-    n1 = vec2.rotatedBy(n1, objectA.angle).rotateBy(Rotation.inverse(objectB.angle));
-    n2 = vec2.rotatedBy(n2, objectA.angle).rotateBy(Rotation.inverse(objectB.angle));
-
     let contactPoints: vec2[];
     if(vec2.dot(n1, bestResult.axis) < vec2.dot(n2, bestResult.axis)){
         contactPoints = [shapeA.vertices[n0idx].position, shapeA.vertices[n1idx].position];
@@ -99,8 +100,8 @@ function SAT(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: 
     else{
         contactPoints = [shapeA.vertices[n1idx].position, shapeA.vertices[n2idx].position];
     }
-    contactPoints = contactPoints.map((v) => (worldToVertexSpace(v, objectA, objectB, shapeB.vertices[bestResult.Bindex])));
-    let b2 = objectToVertexSpace(shapeB.vertices[b1idx].position, shapeB.vertices[bestResult.Bindex]);
+    contactPoints = contactPoints.map((v) => (worldToVertexSpace(v, shapeB.vertices[bestResult.Bindex])));
+    let b2 = worldToVertexSpace(shapeB.vertices[b1idx].position, shapeB.vertices[bestResult.Bindex]);
 
     for(let i = contactPoints.length - 1; i >= 0; i--){
         if(contactPoints[i].x > 0){
@@ -117,28 +118,19 @@ function SAT(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: 
             contactPoints[i].y = b2.y;
         }
     }
-    contactPoints = contactPoints.map((v) => (vertexToWorldSpace(v, objectB, shapeB.vertices[bestResult.Bindex])));
+    contactPoints = contactPoints.map((v) => (vertexToWorldSpace(v, shapeB.vertices[bestResult.Bindex])));
     return {
-        shapeA: shapeA,
-        shapeB: shapeB,
-
-        objectA: objectA,
-        objectB: objectB,
-
-        normal: vec2.rotatedBy(bestResult.axis,objectB.angle),
+        normal: bestResult.axis,
         depth: bestResult.depth,
-
         contactPoints: contactPoints
-
     }
-    //return bestResult;
 }
-export function PolygonCollsion(shapeA: Polygon, shapeB: Polygon, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
-    let rA = SAT(shapeA, shapeB, objectA, objectB);
+function PolygonCollsion(shapeA: Polygon, shapeB: Polygon): Contact | false{
+    let rA = SAT(shapeA, shapeB);
     if(!rA){
         return false;
     }
-    let rB = SAT(shapeB, shapeA, objectB, objectA);
+    let rB = SAT(shapeB, shapeA);
     if(!rB){
         return false;
     }
@@ -150,8 +142,7 @@ export function PolygonCollsion(shapeA: Polygon, shapeB: Polygon, objectA: Physi
         return rA;
     }
 }
-export function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
-    let localCenter = objectB.worldToLocalSpace(objectA.localToWorldSpace(shapeA.COM));
+function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon): Contact | false{
 
     let bestResult: {distance: number, normal: vec2, contact: vec2};
     bestResult = {distance: Infinity, normal: vec2.zero(), contact: vec2.zero()};
@@ -160,8 +151,8 @@ export function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon, objectA:
     for(let i = 0; i < shapeB.vertices.length; i++){
         let vertex = shapeB.vertices[i];
         
-        let relativeCenter = objectToVertexSpace(localCenter, vertex);
-        let relativeLast = objectToVertexSpace(lastPoint, vertex);
+        let relativeCenter = worldToVertexSpace(shapeA.position, vertex);
+        let relativeLast = worldToVertexSpace(lastPoint, vertex);
         lastPoint = vertex.position;
         
         
@@ -171,8 +162,8 @@ export function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon, objectA:
         if(relativeCenter.y > 0){
             currentResult = {
                 distance: relativeCenter.mag(),
-                contact: new vec2(0,0),
-                normal: vec2.asUnitVector(vec2.minus(localCenter, vertex.position))}
+                contact: vertex.position,
+                normal: vec2.asUnitVector(vec2.minus(shapeA.position, vertex.position))}
                      
         }
         else{
@@ -184,7 +175,7 @@ export function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon, objectA:
             }
             currentResult = {
                 distance: relativeCenter.x,
-                contact: new vec2(0, relativeCenter.y),
+                contact: vertexToWorldSpace(new vec2(0, relativeCenter.y), vertex),
                 normal: vertex.normal}
         }
 
@@ -194,29 +185,21 @@ export function CirclePolygonCollision(shapeA: Circle, shapeB: Polygon, objectA:
 
         
         if(Math.abs(currentResult.distance) < Math.abs(bestResult.distance)){
-            bestResult.distance = currentResult.distance;
-            bestResult.normal = currentResult.normal;
-            bestResult.contact = vertexToWorldSpace(currentResult.contact, objectB, vertex);
+            bestResult = currentResult;
         }
     }
     if(bestResult.distance > shapeA.radius){
         return false;
     }
     return {
-        shapeA: shapeA,
-        shapeB: shapeB,
-
-        objectA: objectA,
-        objectB: objectB,
-
-        normal: vec2.rotatedBy(bestResult.normal, objectB.angle),
+        normal: bestResult.normal,
         depth: shapeA.radius - bestResult.distance,
 
         contactPoints: [bestResult.contact]
     }
 }
-export function PolygonCircleCollsion(shapeA: Polygon, shapeB: Circle, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
-    let ret = CirclePolygonCollision(shapeB, shapeA, objectB, objectA);
+function PolygonCircleCollsion(shapeA: Polygon, shapeB: Circle): Contact | false{
+    let ret = CirclePolygonCollision(shapeB, shapeA);
     if(!ret){
         return false;
     }
@@ -226,9 +209,8 @@ export function PolygonCircleCollsion(shapeA: Polygon, shapeB: Circle, objectA: 
     }
 }
 
-export function CircleCircleCollision(shapeA: Circle, shapeB: Circle, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
-    let Acenter = objectB.worldToLocalSpace(objectA.localToWorldSpace(shapeA.COM));
-    let between = vec2.minus(Acenter, shapeB.COM);
+function CircleCircleCollision(shapeA: Circle, shapeB: Circle): Contact | false{
+    let between = vec2.minus(shapeA.position, shapeB.position);
     let dist = between.mag();
     if(between.x == 0 && between.y == 0){
         between.y = 1;
@@ -240,33 +222,27 @@ export function CircleCircleCollision(shapeA: Circle, shapeB: Circle, objectA: P
         let normal = vec2.dividedBy(between, dist);
         return{
             depth: shapeA.radius + shapeB.radius - dist,
-            normal: normal.rotateBy(objectB.angle),
+            normal: normal,
 
-            shapeA: shapeA,
-            shapeB: shapeB,
-
-            objectA: objectA,
-            objectB: objectB,
-
-            contactPoints: [objectB.localToWorldSpace(vec2.times(normal, shapeB.radius))]
+            contactPoints: [vec2.plus(shapeB.position, vec2.times(normal, shapeB.radius))]
         }
     }
 }
-export function ShapeCollision(shapeA: Shape, shapeB: Shape, objectA: PhysicsObject, objectB: PhysicsObject): Contact | false{
+export function ShapeCollision(shapeA: Shape, shapeB: Shape): Contact | false{
     if(shapeA.type == ShapeType.CIRCLE){
         if(shapeB.type == ShapeType.CIRCLE){
-            return CircleCircleCollision(shapeA as Circle, shapeB as Circle, objectA, objectB);
+            return CircleCircleCollision(shapeA as Circle, shapeB as Circle);
         }
         else{
-            return CirclePolygonCollision(shapeA as Circle, shapeB as Polygon, objectA, objectB);
+            return CirclePolygonCollision(shapeA as Circle, shapeB as Polygon);
         }
     }
     else{
         if(shapeB.type == ShapeType.CIRCLE){
-            return PolygonCircleCollsion(shapeA as Polygon, shapeB as Circle, objectA, objectB);
+            return PolygonCircleCollsion(shapeA as Polygon, shapeB as Circle);
         }
         else{
-            return PolygonCollsion(shapeA as Polygon, shapeB as Polygon, objectA, objectB);
+            return PolygonCollsion(shapeA as Polygon, shapeB as Polygon);
         }
     }
 }
@@ -274,8 +250,12 @@ export function Collision(objectA: PhysicsObject, objectB: PhysicsObject): Conta
     let results: Contact[] = [];
     for(let i = 0; i < objectA.colliders.length; i++){
         for(let j = 0; j < objectB.colliders.length; j++){
-            let res = ShapeCollision(objectA.colliders[i], objectB.colliders[j], objectA, objectB);
+            let transformedA = shapeFromObjectToWorldSpace(objectA.colliders[i], objectA);
+            let transformedB = shapeFromObjectToWorldSpace(objectB.colliders[j], objectB);
+            let res = ShapeCollision(transformedA, transformedB);
             if(res){
+                res.objectA = objectA;
+                res.objectB = objectB;
                 results.push(res);
             }
         }
