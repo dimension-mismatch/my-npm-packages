@@ -1,0 +1,13 @@
+{
+  "name": "@dimension-mismatch/svgphysics",
+  "version": "0.0.1",
+  "description": "rendering 2dphysics scenes with svgtools",
+  "main": "svgRenderedWorld.ts",
+  "author": "dimension-mismatch",
+  "license": "ISC",
+  "dependencies": {
+    "@dimension-mismatch/2dphysics": "^0.0.2",
+    "@dimension-mismatch/svgtools": "^0.0.2",
+    "@dimension-mismatch/vec2": "^0.0.1"
+  }
+}

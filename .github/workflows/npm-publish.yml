@@ -14,6 +14,7 @@ on:
         - svgtools
         - vec2
         - 2dphysics
+        - svgphysics
 
 jobs:
   publish-npm:

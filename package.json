@@ -7,7 +7,7 @@
     "htmltools",
     "svgtools",
     "2dphysics",
-    "vec2"
-
+    "vec2",
+    "svgphysics"
   ]
 }
